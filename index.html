@@ -426,4 +426,539 @@
                             </select>
                         </div>
 
-          
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Clinical Indication</label>
+                            <select 
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                value={patientData.indication}
+                                onChange={(e) => updatePatientData('indication', e.target.value)}
+                            >
+                                <option value="">Select indication...</option>
+                                <option value="afib">Atrial Fibrillation</option>
+                                <option value="vte">DVT/PE (VTE)</option>
+                                <option value="valve">Mechanical Heart Valve</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+                            <input 
+                                type="number"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                value={patientData.age}
+                                onChange={(e) => updatePatientData('age', e.target.value)}
+                                placeholder="Years"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Weight (kg)</label>
+                            <input 
+                                type="number"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                value={patientData.weight}
+                                onChange={(e) => updatePatientData('weight', e.target.value)}
+                                placeholder="kg"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Serum Creatinine (mg/dL)</label>
+                            <input 
+                                type="number"
+                                step="0.1"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                value={patientData.creatinine}
+                                onChange={(e) => updatePatientData('creatinine', e.target.value)}
+                                placeholder="mg/dL"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                            <select 
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                                value={patientData.gender}
+                                onChange={(e) => updatePatientData('gender', e.target.value)}
+                            >
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {patientData.indication === 'afib' && (
+                        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <h3 className="font-semibold text-blue-900 mb-3">CHA₂DS₂-VASc Risk Factors</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {[
+                                    { key: 'hypertension', label: 'Hypertension' },
+                                    { key: 'diabetes', label: 'Diabetes' },
+                                    { key: 'stroke', label: 'Prior Stroke/TIA' },
+                                    { key: 'heartFailure', label: 'Heart Failure' },
+                                    { key: 'vascular', label: 'Vascular Disease' }
+                                ].map(({ key, label }) => (
+                                    <label key={key} className="flex items-center space-x-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox"
+                                            checked={patientData[key]}
+                                            onChange={(e) => updatePatientData(key, e.target.checked)}
+                                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm text-gray-700">{label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {patientData.indication === 'vte' && (
+                        <div className="mt-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                            <h3 className="font-semibold text-purple-900 mb-3">VTE Timing</h3>
+                            <select 
+                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                value={patientData.vteTime}
+                                onChange={(e) => updatePatientData('vteTime', e.target.value)}
+                            >
+                                <option value="">Select time since diagnosis...</option>
+                                <option value="<3months">&lt;3 months (High Risk)</option>
+                                <option value="3-12months">3-12 months (Moderate Risk)</option>
+                                <option value=">12months">&gt;12 months (Low Risk)</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {patientData.indication === 'valve' && (
+                        <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                            <h3 className="font-semibold text-red-900 mb-3">Valve Type</h3>
+                            <select 
+                                className="w-full p-3 border border-gray-300 rounded-lg"
+                                value={patientData.valveType}
+                                onChange={(e) => updatePatientData('valveType', e.target.value)}
+                            >
+                                <option value="">Select valve type...</option>
+                                <option value="mitral">Mitral (High Risk - Bridging Recommended)</option>
+                                <option value="aorticOld">Aortic - Ball-cage (High Risk)</option>
+                                <option value="aorticModern">Aortic - Bileaflet without AF (Moderate Risk)</option>
+                            </select>
+                        </div>
+                    )}
+
+                    <div className="mt-8 flex justify-end">
+                        <button 
+                            onClick={() => setCurrentStep(2)}
+                            className="btn-primary text-white px-8 py-3 rounded-lg font-semibold flex items-center gap-2"
+                            disabled={!patientData.anticoagulant || !patientData.indication}
+                        >
+                            Next Step <span className="text-lg">→</span>
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const Step2ProcedureRisk = () => (
+                <div className="glass-panel rounded-2xl p-8 shadow-xl">
+                    <h2 className="text-2xl font-bold mb-6 gradient-text">Step 2: Estimate Bleeding Risk</h2>
+                    
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Procedure Category</label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[
+                                { key: 'minimal', label: 'Minimal Bleeding Risk', color: 'green', examples: bleedingRiskProcedures.minimal },
+                                { key: 'low', label: 'Low-Moderate Bleeding Risk', color: 'yellow', examples: bleedingRiskProcedures.low },
+                                { key: 'high', label: 'High Bleeding Risk', color: 'red', examples: bleedingRiskProcedures.high }
+                            ].map(({ key, label, color, examples }) => (
+                                <div 
+                                    key={key}
+                                    onClick={() => updatePatientData('bleedingRisk', key)}
+                                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${patientData.bleedingRisk === key ? `border-${color}-500 bg-${color}-50` : 'border-gray-200 hover:border-gray-300'}`}
+                                >
+                                    <div className={`w-4 h-4 rounded-full bg-${color}-500 mb-2`}></div>
+                                    <h3 className="font-semibold mb-2">{label}</h3>
+                                    <ul className="text-xs text-gray-600 space-y-1">
+                                        {examples.slice(0, 3).map((ex, i) => (
+                                            <li key={i}>• {ex}</li>
+                                        ))}
+                                        <li className="text-gray-400">+ {examples.length - 3} more...</li>
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <label className="flex items-center space-x-3 cursor-pointer">
+                            <input 
+                                type="checkbox"
+                                checked={patientData.neuraxial}
+                                onChange={(e) => updatePatientData('neuraxial', e.target.checked)}
+                                className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                            />
+                            <div>
+                                <span className="font-medium text-gray-900">Neuraxial Anesthesia/Procedure</span>
+                                <p className="text-sm text-gray-500">Spinal/epidural anesthesia or spinal surgery (requires longer interruption)</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Procedure Urgency</label>
+                        <div className="flex gap-4">
+                            {['elective', 'urgent', 'emergent'].map((urgency) => (
+                                <button
+                                    key={urgency}
+                                    onClick={() => updatePatientData('procedureUrgency', urgency)}
+                                    className={`px-6 py-3 rounded-lg font-medium capitalize transition-all ${patientData.procedureUrgency === urgency ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                                >
+                                    {urgency}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {patientData.procedureUrgency !== 'elective' && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+                            <div className="flex items-start gap-3">
+                                <AlertIcon />
+                                <div>
+                                    <h3 className="font-semibold text-red-900">Urgent/Emergent Procedure</h3>
+                                    <p className="text-sm text-red-700 mt-1">
+                                        For urgent/emergent procedures, consider reversal agents if recent DOAC dose:
+                                        <br/>• Andexanet alfa (Factor Xa inhibitors)
+                                        <br/>• Idarucizumab (Dabigatran)
+                                        <br/>• 4-factor PCC (all DOACs)
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex justify-between mt-8">
+                        <button 
+                            onClick={() => setCurrentStep(1)}
+                            className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium"
+                        >
+                            ← Back
+                        </button>
+                        <button 
+                            onClick={() => setCurrentStep(3)}
+                            className="btn-primary text-white px-8 py-3 rounded-lg font-semibold"
+                            disabled={!patientData.bleedingRisk}
+                        >
+                            Next Step →
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const Step3Review = () => {
+                const chads = calculateCHA2DS2VASc();
+                const crcl = calculateCockcroftGault();
+                
+                return (
+                    <div className="glass-panel rounded-2xl p-8 shadow-xl">
+                        <h2 className="text-2xl font-bold mb-6 gradient-text">Step 3: Review Risk Assessment</h2>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <HeartIcon /> Thromboembolic Risk
+                                </h3>
+                                {patientData.indication === 'afib' && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">CHA₂DS₂-VASc Score:</span>
+                                            <span className="font-bold text-2xl text-indigo-600">{chads}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {chads === 0 ? 'Low Risk' : chads <= 2 ? 'Moderate Risk' : 'High Risk'}
+                                        </div>
+                                    </div>
+                                )}
+                                {patientData.indication === 'vte' && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Time since event:</span>
+                                            <span className="font-semibold">{patientData.vteTime}</span>
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {patientData.vteTime === '<3months' ? 'High Risk - Consider delaying surgery' : 'Moderate/Low Risk'}
+                                        </div>
+                                    </div>
+                                )}
+                                {patientData.indication === 'valve' && (
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Valve Type:</span>
+                                            <span className="font-semibold">{patientData.valveType}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <AlertIcon /> Bleeding Risk
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Procedure Risk:</span>
+                                        <span className={`font-semibold capitalize ${patientData.bleedingRisk === 'high' ? 'text-red-600' : patientData.bleedingRisk === 'minimal' ? 'text-green-600' : 'text-yellow-600'}`}>
+                                            {patientData.bleedingRisk}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Neuraxial:</span>
+                                        <span className="font-semibold">{patientData.neuraxial ? 'Yes (+2 days hold)' : 'No'}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Urgency:</span>
+                                        <span className="font-semibold capitalize">{patientData.procedureUrgency}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {crcl && (
+                                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                        <PillIcon /> Renal Function
+                                    </h3>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">CrCl:</span>
+                                            <span className="font-bold text-2xl text-indigo-600">{crcl} mL/min</span>
+                                        </div>
+                                        <div className="text-sm text-gray-500">
+                                            {crcl >= 60 ? 'Normal' : crcl >= 30 ? 'Moderate impairment' : 'Severe impairment - Dose adjustment needed'}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                                <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                    <ClockIcon /> Anticoagulant
+                                </h3>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Drug:</span>
+                                        <span className="font-semibold">{anticoagulants[patientData.anticoagulant]?.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Half-life:</span>
+                                        <span className="font-semibold text-sm">{anticoagulants[patientData.anticoagulant]?.halfLife}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between mt-8">
+                            <button 
+                                onClick={() => setCurrentStep(2)}
+                                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium"
+                            >
+                                ← Back
+                            </button>
+                            <button 
+                                onClick={generateRecommendations}
+                                className="btn-primary text-white px-8 py-3 rounded-lg font-semibold shadow-lg"
+                            >
+                                Generate Management Plan →
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const Step4Recommendations = () => {
+                if (!recommendations) return null;
+                
+                return (
+                    <div className="glass-panel rounded-2xl p-8 shadow-xl">
+                        <h2 className="text-2xl font-bold mb-6 gradient-text">Perioperative Management Plan</h2>
+                        
+                        <div className="mb-6 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-indigo-900">Thromboembolic Risk:</span>
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                    recommendations.thromboembolicRisk === 'high' ? 'bg-red-100 text-red-800' :
+                                    recommendations.thromboembolicRisk === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                }`}>
+                                    {recommendations.thromboembolicRisk.toUpperCase()}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="font-semibold text-indigo-900">Bridging Recommended:</span>
+                                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${recommendations.bridging ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                    {recommendations.bridging ? 'YES' : 'NO'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {recommendations.delayRecommended && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                                <AlertIcon />
+                                <div>
+                                    <h3 className="font-semibold text-red-900">Consider Delaying Surgery</h3>
+                                    <p className="text-sm text-red-700 mt-1">
+                                        Recent VTE (&lt;3 months) carries high recurrence risk. If elective, consider delaying 3+ months if possible.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <ClockIcon /> Preoperative Management
+                                    </h3>
+                                </div>
+                                <div className="p-6">
+                                    <div className="space-y-4">
+                                        {recommendations.specificInstructions.filter(i => i.includes('Stop') || i.includes('Start') || i.includes('Check')).map((instruction, idx) => (
+                                            <div key={idx} className="timeline-item text-gray-700">
+                                                {instruction}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <CheckIcon /> Postoperative Management
+                                    </h3>
+                                </div>
+                                <div className="p-6">
+                                    <div className="space-y-4">
+                                        {recommendations.specificInstructions.filter(i => i.includes('Resume') || i.includes('post') || i.includes('prophylactic')).map((instruction, idx) => (
+                                            <div key={idx} className="timeline-item text-gray-700">
+                                                {instruction}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-6">
+                                <h3 className="font-semibold text-yellow-900 mb-3">Important Considerations</h3>
+                                <ul className="space-y-2 text-sm text-yellow-800">
+                                    <li>• Ensure adequate hemostasis before resuming anticoagulation</li>
+                                    <li>• Coordinate with surgeon regarding bleeding risk</li>
+                                    <li>• Consider prophylactic LMWH for high bleeding risk procedures until DOAC resumed</li>
+                                    <li>• Monitor for signs of thrombosis (new swelling, pain, neurological changes)</li>
+                                    {patientData.neuraxial && (
+                                        <li className="font-semibold">• Neuraxial: Ensure 5 half-lives elapsed before catheter removal; restart DOAC 6 hours after catheter removal</li>
+                                    )}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-8 flex justify-between">
+                            <button 
+                                onClick={() => setCurrentStep(3)}
+                                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium"
+                            >
+                                ← Back
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setCurrentStep(1);
+                                    setPatientData({
+                                        anticoagulant: '',
+                                        indication: '',
+                                        age: '',
+                                        weight: '',
+                                        creatinine: '',
+                                        gender: 'male',
+                                        hypertension: false,
+                                        diabetes: false,
+                                        stroke: false,
+                                        heartFailure: false,
+                                        vascular: false,
+                                        vteTime: '',
+                                        valveType: '',
+                                        procedure: '',
+                                        procedureUrgency: 'elective',
+                                        bleedingRisk: '',
+                                        neuraxial: false
+                                    });
+                                    setRecommendations(null);
+                                }}
+                                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300"
+                            >
+                                New Patient
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const GuidelinesReference = () => (
+                <div className="mt-8 glass-panel rounded-2xl p-6 shadow-lg">
+                    <h3 className="font-semibold text-gray-900 mb-4">Evidence-Based Guidelines (2024-2025)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                        <div className="space-y-2">
+                            <p className="font-medium text-gray-900">Key References:</p>
+                            <ul className="space-y-1 list-disc list-inside">
+                                <li>2024 AHA/ACC/ACS Guideline for Perioperative Cardiovascular Management</li>
+                                <li>2022 CHEST Guideline: Perioperative Management of Antithrombotic Therapy</li>
+                                <li>PAUSE Trial (Perioperative Anticoagulation Use for Surgery Evaluation)</li>
+                                <li>PERIOP-2 Trial (Bridging in High Risk Patients)</li>
+                                <li>BRIDGE Trial (Atrial Fibrillation Bridging)</li>
+                            </ul>
+                        </div>
+                        <div className="space-y-2">
+                            <p className="font-medium text-gray-900">Key Principles:</p>
+                            <ul className="space-y-1 list-disc list-inside">
+                                <li>No bridging for DOACs (rapid offset/onset)</li>
+                                <li>No bridging for most AF patients on warfarin</li>
+                                <li>Bridging only for mechanical mitral valves, AF with recent stroke, or recent VTE</li>
+                                <li>Time-based interruption (3-5 half-lives) preferred over lab monitoring</li>
+                                <li>Resume warfarin 12-24h post-op; DOACs 24-72h based on bleeding risk</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="container mx-auto px-4 py-8 max-w-4xl">
+                    <header className="text-center mb-10">
+                        <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Perioperative Anticoagulation Manager</h1>
+                        <p className="text-white/90 text-lg">Clinical decision support for surgical anticoagulation management</p>
+                        <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur rounded-full text-white text-sm">
+                            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                            Based on 2024 AHA/ACC & 2022 CHEST Guidelines
+                        </div>
+                    </header>
+
+                    <StepIndicator />
+
+                    <div className="transition-all duration-300">
+                        {currentStep === 1 && <Step1PatientInfo />}
+                        {currentStep === 2 && <Step2ProcedureRisk />}
+                        {currentStep === 3 && <Step3Review />}
+                        {currentStep === 5 && <Step4Recommendations />}
+                    </div>
+
+                    <GuidelinesReference />
+
+                    <footer className="mt-12 text-center text-white/70 text-sm">
+                        <p className="mb-2">For clinical decision support only. Always verify with institutional protocols.</p>
+                        <p>© 2025 Perioperative Anticoagulation Manager | Ready for GitHub & Vercel Deployment</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
