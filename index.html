@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perioperative Anticoagulation Manager</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+        
+        .step-indicator.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+        }
+        
+        .risk-low { border-left: 4px solid #10b981; }
+        .risk-moderate { border-left: 4px solid #f59e0b; }
+        .risk-high { border-left: 4px solid #ef4444; }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1.25rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: #e5e7eb;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+        
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // Icons
+        const HeartIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        );
+        
+        const AlertIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+        );
+        
+        const CheckIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        );
+        
+        const ClockIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        );
+        
+        const PillIcon = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+        );
+
+        // Data Models based on document and latest guidelines
+        const anticoagulants = {
+            warfarin: {
+                name: "Warfarin (VKA)",
+                halfLife: "20-60 hours",
+                preopHighRisk: "Stop 5 days before (target INR <1.5)",
+                preopLowRisk: "Stop 5 days before (target INR <1.5)",
+                postopResume: "Resume 12-24 hours after surgery when hemostasis secured",
+                bridgingRecommended: true,
+                color: "blue"
+            },
+            apixaban: {
+                name: "Apixaban (Eliquis)",
+                halfLife: "~12 hours",
+                preopHighRisk: "Stop 2 days before (48 hours)",
+                preopLowRisk: "Stop 1 day before (24 hours)",
+                postopResume: "Resume 1-2 days after low risk, 2-3 days after high risk",
+                bridgingRecommended: false,
+                color: "indigo",
+                doseAdjustment: "No adjustment needed for renal function >30"
+            },
+            rivaroxaban: {
+                name: "Rivaroxaban (Xarelto)",
+                halfLife: "~11 hours (young), ~13 hours (elderly)",
+                preopHighRisk: "Stop 2 days before (48 hours)",
+                preopLowRisk: "Stop 1 day before (24 hours)",
+                postopResume: "Resume 1-2 days after low risk, 2-3 days after high risk",
+                bridgingRecommended: false,
+                color: "purple"
+            },
+            dabigatran: {
+                name: "Dabigatran (Pradaxa)",
+                halfLife: "~14 hours (CrCl >80), ~18 hours (CrCl 50-80), ~28 hours (CrCl 30-50)",
+                preopHighRisk: "Stop 2-4 days before (CrCl >50: 2 days, CrCl 30-50: 4 days)",
+                preopLowRisk: "Stop 1-2 days before (CrCl >50: 1 day, CrCl 30-50: 2 days)",
+                postopResume: "Resume 1-2 days after low risk, 2-3 days after high risk",
+                bridgingRecommended: false,
+                color: "pink",
+                renalDependent: true
+            },
+            edoxaban: {
+                name: "Edoxaban (Lixiana/Savaysa)",
+                halfLife: "~10-14 hours",
+                preopHighRisk: "Stop 2 days before (48 hours)",
+                preopLowRisk: "Stop 1 day before (24 hours)",
+                postopResume: "Resume 1-2 days after low risk, 2-3 days after high risk",
+                bridgingRecommended: false,
+                color: "teal"
+            }
+        };
+
+        const bleedingRiskProcedures = {
+            minimal: [
+                "Dental procedures (extraction, cleaning)",
+                "Skin biopsy/dermatologic procedures",
+                "Cataract surgery",
+                "Pacemaker/ICD implantation (low risk)",
+                "Colonoscopy without polypectomy",
+                "Superficial lymph node biopsy"
+            ],
+            low: [
+                "Cholecystectomy (laparoscopic)",
+                "Inguinal hernia repair",
+                "Carpal tunnel release",
+                "Arthroscopy",
+                "Colonoscopy with polypectomy",
+                "Abdominal hysterectomy",
+                "Breast surgery"
+            ],
+            high: [
+                "Cardiac surgery (CABG, valve replacement)",
+                "Major cancer surgery",
+                "Joint replacement (hip/knee)",
+                "Neurosurgery (intracranial)",
+                "Spinal surgery with neuraxial anesthesia",
+                "Kidney biopsy",
+                "Procedures >45 minutes duration"
+            ]
+        };
+
+        const thromboembolicRiskFactors = {
+            atrialFibrillation: {
+                name: "Atrial Fibrillation",
+                calculateScore: (age, hypertension, diabetes, stroke, heartFailure, vascular) => {
+                    let score = 0;
+                    if (age >= 75) score += 2;
+                    else if (age >= 65) score += 1;
+                    if (hypertension) score += 1;
+                    if (diabetes) score += 1;
+                    if (stroke) score += 2;
+                    if (heartFailure) score += 1;
+                    if (vascular) score += 1;
+                    return score;
+                },
+                riskLevels: {
+                    low: { score: 0, risk: "Low", annualRisk: "0%", bridging: false },
+                    moderate: { score: "1-2", risk: "Moderate", annualRisk: "2.2%", bridging: false },
+                    high: { score: "≥3", risk: "High", annualRisk: "4-5%", bridging: "Consider if mechanical valve or recent stroke" }
+                }
+            },
+            vte: {
+                name: "Venous Thromboembolism (DVT/PE)",
+                riskLevels: {
+                    recent: { period: "<3 months", risk: "High", bridging: true, delaySurgery: true },
+                    intermediate: { period: "3-12 months", risk: "Moderate", bridging: false },
+                    remote: { period: ">12 months", risk: "Low", bridging: false }
+                }
+            },
+            mechanicalValve: {
+                name: "Mechanical Heart Valve",
+                riskLevels: {
+                    mitral: { location: "Mitral", risk: "High", bridging: true },
+                    aorticOld: { location: "Aortic (ball-cage)", risk: "High", bridging: true },
+                    aorticModern: { location: "Aortic (bileaflet) + no AF", risk: "Moderate", bridging: "Consider if additional risk factors" }
+                }
+            }
+        };
+
+        const App = () => {
+            const [currentStep, setCurrentStep] = useState(1);
+            const [patientData, setPatientData] = useState({
+                anticoagulant: '',
+                indication: '',
+                age: '',
+                weight: '',
+                creatinine: '',
+                gender: 'male',
+                hypertension: false,
+                diabetes: false,
+                stroke: false,
+                heartFailure: false,
+                vascular: false,
+                vteTime: '',
+                valveType: '',
+                procedure: '',
+                procedureUrgency: 'elective',
+                bleedingRisk: '',
+                neuraxial: false
+            });
+            const [recommendations, setRecommendations] = useState(null);
+
+            const updatePatientData = (key, value) => {
+                setPatientData(prev => ({ ...prev, [key]: value }));
+            };
+
+            const calculateCHA2DS2VASc = () => {
+                let score = 0;
+                if (patientData.age >= 75) score += 2;
+                else if (patientData.age >= 65) score += 1;
+                if (patientData.hypertension) score += 1;
+                if (patientData.diabetes) score += 1;
+                if (patientData.stroke) score += 2;
+                if (patientData.heartFailure) score += 1;
+                if (patientData.vascular) score += 1;
+                if (patientData.gender === 'female') score += 1;
+                return score;
+            };
+
+            const calculateCockcroftGault = () => {
+                if (!patientData.creatinine || !patientData.age || !patientData.weight) return null;
+                const creatinine = parseFloat(patientData.creatinine);
+                const age = parseFloat(patientData.age);
+                const weight = parseFloat(patientData.weight);
+                
+                let crcl = ((140 - age) * weight) / (72 * creatinine);
+                if (patientData.gender === 'female') crcl *= 0.85;
+                return Math.round(crcl);
+            };
+
+            const generateRecommendations = () => {
+                const crcl = calculateCockcroftGault();
+                const chads = calculateCHA2DS2VASc();
+                const drug = anticoagulants[patientData.anticoagulant];
+                
+                let thromboembolicRisk = "low";
+                let bridging = false;
+                let delayRecommended = false;
+                
+                // Determine thromboembolic risk
+                if (patientData.indication === 'afib') {
+                    if (chads >= 4) thromboembolicRisk = "high";
+                    else if (chads >= 2) thromboembolicRisk = "moderate";
+                    
+                    // Bridging only for very high risk per 2022 CHEST/2024 AHA
+                    if (patientData.stroke && patientData.strokeRecent) {
+                        bridging = true;
+                    }
+                } else if (patientData.indication === 'vte') {
+                    if (patientData.vteTime === '<3months') {
+                        thromboembolicRisk = "high";
+                        delayRecommended = true;
+                    } else if (patientData.vteTime === '3-12months') {
+                        thromboembolicRisk = "moderate";
+                    }
+                } else if (patientData.indication === 'valve') {
+                    if (patientData.valveType === 'mitral' || patientData.valveType === 'aorticOld') {
+                        thromboembolicRisk = "high";
+                        bridging = true;
+                    } else if (patientData.valveType === 'aorticModern') {
+                        thromboembolicRisk = "moderate";
+                    }
+                }
+
+                // Adjust for neuraxial - requires longer interruption
+                let preopDays = patientData.bleedingRisk === 'high' ? 2 : 1;
+                if (patientData.neuraxial) {
+                    preopDays = patientData.anticoagulant === 'dabigatran' ? 4 : 3;
+                }
+                
+                // Dabigatran renal adjustment
+                if (patientData.anticoagulant === 'dabigatran' && crcl && crcl < 50) {
+                    preopDays += 2;
+                }
+
+                const rec = {
+                    drug: drug,
+                    thromboembolicRisk,
+                    bridging,
+                    delayRecommended,
+                    chads,
+                    crcl,
+                    preopDays,
+                    postopDays: patientData.bleedingRisk === 'high' ? "2-3 days" : "1-2 days",
+                    procedureRisk: patientData.bleedingRisk,
+                    neuraxial: patientData.neuraxial,
+                    specificInstructions: []
+                };
+
+                // Generate specific instructions
+                if (patientData.anticoagulant === 'warfarin') {
+                    rec.specificInstructions.push("Stop warfarin 5 days preoperatively (last dose on day -5)");
+                    rec.specificInstructions.push("Check INR on day -1; if >1.5, consider low-dose vitamin K (1-2mg PO)");
+                    if (bridging) {
+                        rec.specificInstructions.push(`Start LMWH (e.g., enoxaparin 1mg/kg SC q12h or dalteparin 100U/kg SC q12h) on day -3`);
+                        rec.specificInstructions.push("Last dose of LMWH: 24 hours pre-procedure (morning of day -1)");
+                        rec.specificInstructions.push("Resume warfarin 12-24 hours post-op when hemostasis secured");
+                        rec.specificInstructions.push("Resume LMWH 48-72 hours post-op (when hemostasis secured) until INR therapeutic");
+                    } else {
+                        rec.specificInstructions.push("No bridging recommended per 2022 CHEST guidelines");
+                        rec.specificInstructions.push("Resume warfarin 12-24 hours post-op when hemostasis secured");
+                    }
+                } else {
+                    // DOAC management per PAUSE trial and 2024 guidelines
+                    const holdDays = preopDays;
+                    rec.specificInstructions.push(`Stop ${drug.name} ${holdDays} days before procedure`);
+                    if (patientData.anticoagulant === 'dabigatran' && crcl && crcl < 30) {
+                        rec.specificInstructions.push("Consider holding for additional 1-2 days due to CrCl <30");
+                    }
+                    rec.specificInstructions.push("No bridging with heparin (not recommended for DOACs)");
+                    rec.specificInstructions.push(`Resume ${drug.name} ${rec.postopDays} after procedure when hemostasis secured and patient tolerating PO`);
+                    if (patientData.bleedingRisk === 'high') {
+                        rec.specificInstructions.push("Consider prophylactic-dose LMWH (e.g., enoxaparin 40mg daily) until DOAC resumed");
+                    }
+                }
+
+                // Special cases
+                if (patientData.procedure === 'dental') {
+                    rec.specificInstructions.push("Dental specific: Can often continue DOAC or hold only day of procedure");
+                    rec.specificInstructions.push("Consider tranexamic acid mouthwash (10mL of 5% solution) pre and post procedure");
+                }
+
+                setRecommendations(rec);
+                setCurrentStep(5);
+            };
+
+            const StepIndicator = () => (
+                <div className="flex justify-between mb-8 px-4">
+                    {[1, 2, 3, 4, 5].map((step) => (
+                        <div key={step} className={`step-indicator flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm ${currentStep >= step ? 'active' : 'bg-gray-200 text-gray-500'}`}>
+                            {step}
+                        </div>
+                    ))}
+                </div>
+            );
+
+            const Step1PatientInfo = () => (
+                <div className="glass-panel rounded-2xl p-8 shadow-xl">
+                    <h2 className="text-2xl font-bold mb-6 gradient-text">Step 1: Patient Characteristics</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Anticoagulant</label>
+                            <select 
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                value={patientData.anticoagulant}
+                                onChange={(e) => updatePatientData('anticoagulant', e.target.value)}
+                            >
+                                <option value="">Select anticoagulant...</option>
+                                <option value="warfarin">Warfarin (VKA)</option>
+                                <option value="apixaban">Apixaban (Eliquis)</option>
+                                <option value="rivaroxaban">Rivaroxaban (Xarelto)</option>
+                                <option value="dabigatran">Dabigatran (Pradaxa)</option>
+                                <option value="edoxaban">Edoxaban (Lixiana)</option>
+                            </select>
+                        </div>
+
+          
