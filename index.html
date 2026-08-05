@@ -940,10 +940,10 @@
                     <StepIndicator />
 
                     <div className="transition-all duration-300">
-                        {currentStep === 1 && <Step1PatientInfo />}
-                        {currentStep === 2 && <Step2ProcedureRisk />}
-                        {currentStep === 3 && <Step3Review />}
-                        {currentStep === 5 && <Step4Recommendations />}
+                        {currentStep === 1 && Step1PatientInfo()}
+                        {currentStep === 2 && Step2ProcedureRisk()}
+                        {currentStep === 3 && Step3Review()}
+                        {currentStep === 5 && Step4Recommendations()}
                     </div>
 
                     <GuidelinesReference />
